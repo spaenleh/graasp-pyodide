@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <script>
+      var exports = {};
+    </script>
+    <script src="./../dist/PyWorker.js"></script>
+  </head>
+  <body>
+    <p id="output">Hello</p>
+    <script>
+      const outputEl = document.getElementById("output");
+
+      let worker = new PyWorker("./../dist/webWorker.js");
+      worker.maxTimeout = 60;
+      worker.addCommand("alert", (msg) => {
+        alert(msg);
+      });
+
+      worker.onOutput = (text) => {
+        outputEl.textContent = text;
+      };
+
+      // handle figures
+      worker.onFigure = (imageDataUrl) => {
+        console.log("figure: ", imageDataUrl);
+      };
+
+      // handle dynamic user input
+      worker.onInput = (text) => {
+        const res = prompt(text);
+        if (res) {
+          worker.submitInput(res);
+        } else {
+          worker.cancelInput();
+        }
+      };
+
+      // when finished registering the callback removes the activity flag
+      worker.onTerminated = () => {
+        console.log("Worker is done.");
+      };
+
+      worker.preload();
+
+      worker.run(`mood = input("How are you ?"); print(mood)`);
+    </script>
+  </body>
+</html>

@@ -1,0 +1,25 @@
+{
+  "name": "@graasp/pyodide-worker",
+  "version": "0.0.1",
+  "description": "Pyodide worker for Graasp",
+  "main": "src/index.ts",
+  "scripts": {
+    "build": "tsc",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/spaenleh/graasp-pyodide.git"
+  },
+  "keywords": [
+    "pyodide",
+    "graasp",
+    "webworker"
+  ],
+  "author": "Graasp",
+  "license": "AGPL-3.0-or-later",
+  "bugs": {
+    "url": "https://github.com/spaenleh/graasp-pyodide/issues"
+  },
+  "homepage": "https://github.com/spaenleh/graasp-pyodide#readme"
+}
