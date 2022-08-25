@@ -18,6 +18,10 @@
         alert(msg);
       });
 
+      worker.onStatusChanged = (status) => {
+        console.warn("Status update:", status);
+      };
+
       worker.onOutput = (text) => {
         outputEl.textContent = text;
       };
@@ -44,7 +48,7 @@
 
       worker.preload();
 
-      worker.run(`mood = input("How are you ?"); print(mood)`);
+      worker.run(`import sys;print(sys.version);import os;print(os.getcwd())`);
     </script>
   </body>
 </html>

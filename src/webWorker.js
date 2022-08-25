@@ -1,7 +1,6 @@
-importScripts(
-  "Pyodide-v0.2.0.js",
-  "https://cdn.jsdelivr.net/pyodide/v0.17.0/full/pyodide.js"
-);
+let pyodideVersionURL = "https://cdn.jsdelivr.net/pyodide/v0.21.0/full/";
+
+importScripts("Pyodide-v0.2.0.js", `${pyodideVersionURL}pyodide.js`);
 
 var loaded = false;
 
@@ -35,7 +34,7 @@ const options = {
     }
   },
   handleInput: true,
-  pyodideURL: "https://cdn.jsdelivr.net/pyodide/v0.17.0/full/",
+  pyodideURL: pyodideVersionURL,
 };
 const p = new Pyodide(options);
 

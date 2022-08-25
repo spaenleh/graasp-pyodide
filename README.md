@@ -68,3 +68,7 @@ Pull requests are welcome. Open an issue describing the feature or bug that you 
 ## License
 
 [AGPLv3](https://choosealicense.com/licenses/agpl-3.0/)
+
+## Updating Pyodide version
+
+2 files need to be updated in order to change the version of pyodide used: `webWorker.js` and `Pyodide-v0.2.0.js` where they set the url to fetch pyodide from.

@@ -166,7 +166,6 @@ class PyWorker {
           this.stop();
           this.onStatusChanged && this.onStatusChanged("");
           this.onTimeout && this.onTimeout();
-          console.log("Timed out");
         }
         this.timeoutId = -1;
       }, 1000 * this.maxTimeout);
@@ -177,8 +176,6 @@ class PyWorker {
     if (this.worker == null || this.isRunning) {
       this.create();
     }
-    console.log("running");
-
     const msg = src != null ? { cmd: "run", code: src } : { cmd: "preload" };
     this.worker?.postMessage(JSON.stringify(msg));
     this.isRunning = true;
