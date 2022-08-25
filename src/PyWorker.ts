@@ -30,7 +30,7 @@ pyWorker.stop();
 
 */
 
-import { getPythonWorkerCode } from "./webWorker";
+import { getPythonWorkerCode } from "./webWorkerLocal";
 
 class PyWorker {
   workerURL: string;

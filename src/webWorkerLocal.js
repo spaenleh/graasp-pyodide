@@ -1,8 +1,10 @@
 const pyodideVersionURL = "https://cdn.jsdelivr.net/pyodide/v0.21.0/full/";
+// todo: modify this
+const pyodideClassURL = "Pyodide-v0.2.0.js";
 
 export const getPythonWorkerCode = () => {
   return encodeURIComponent(`
-importScripts("Pyodide-v0.2.0.js", "${pyodideVersionURL}pyodide.js");
+importScripts("${pyodideClassURL}", "${pyodideVersionURL}pyodide.js");
 
 var loaded = false;
 let outputClear = false;
