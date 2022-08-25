@@ -1,6 +1,6 @@
 const pyodideVersionURL = "https://cdn.jsdelivr.net/pyodide/v0.21.0/full/";
 // todo: modify this
-const pyodideClassURL = "Pyodide-v0.2.0.js";
+const pyodideClassURL = "https://spaenleh.github.io/graasp-pyodide/Pyodide.js";
 
 export const getPythonWorkerCode = () => {
   return encodeURIComponent(`

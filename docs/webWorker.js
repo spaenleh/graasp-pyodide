@@ -926,7 +926,10 @@ if matplotlib.pyplot.get_fignums():
 
 // ------------------------- Worker Code ---------------------------------- //
 
-importScripts(`${pyodideVersionURL}pyodide.js`);
+importScripts(
+  "https://spaenleh.github.io/graasp-pyodide/Pyodide.js",
+  `${pyodideVersionURL}pyodide.js`
+);
 
 var loaded = false;
 let outputClear = false;
