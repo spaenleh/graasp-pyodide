@@ -6,6 +6,8 @@
   "types": "dist/types.d.ts",
   "scripts": {
     "build": "tsc",
+    "prepack": "yarn build",
+    "prepare": "yarn prepack",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
