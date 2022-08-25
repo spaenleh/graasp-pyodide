@@ -2,7 +2,8 @@
   "name": "@graasp/pyodide-worker",
   "version": "0.0.1",
   "description": "Pyodide worker for Graasp",
-  "main": "src/index.ts",
+  "main": "dist/index.js",
+  "types": "dist/types.d.ts",
   "scripts": {
     "build": "tsc",
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -17,6 +18,11 @@
     "webworker"
   ],
   "author": "Graasp",
+  "contributors": [
+    "Yves Piguet",
+    "Juan Carlos Farah",
+    "Basile Spaenlehauer"
+  ],
   "license": "AGPL-3.0-or-later",
   "bugs": {
     "url": "https://github.com/spaenleh/graasp-pyodide/issues"

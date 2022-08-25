@@ -12,3 +12,5 @@ export interface RunnerConfig {
   // todo: rename to files
   fs: { [key: string]: File };
 }
+
+export type { PyWorker };

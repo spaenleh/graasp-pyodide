@@ -8,7 +8,8 @@
     "preserveConstEnums": true,
     "sourceMap": true,
     "allowJs": true,
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "declaration": true
   },
   "include": ["src/**/*"],
   "exclude": ["node_modules", "**/*.spec.ts", "**/*.test.{ts|js|tsx|jsx}"]

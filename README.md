@@ -1,11 +1,12 @@
 # Graasp Pyodide
 
-Pyodide lets you run Python code in the browser with WebAssembly.
-This is a library that packages the Web Worker interface to include Pyodide in your app.
+[Pyodide](https://pyodide.org/en/stable/index.html) lets you run 🐍 Python code in the browser with [WebAssembly](https://webassembly.org/).
+This package exposes an API to create a web worker that can execute python code.
+You can use this package in your React App, or any other framework.
 
 ## Installation
 
-Us the package manager of your choice (`npm` or `yarn`) and run:
+Use the package manager of your choice (`npm` or `yarn`) and run:
 
 ```bash
 yarn add @graasp/pyodide-worker
@@ -19,7 +20,7 @@ import { PyWorker } from "@graasp/pyodide-worker";
 // create an instance of the PyWorker with the path to the worker code (is sensible to where this is being called)
 let worker = new PyWorker("path/to/worker");
 
-// specify the timeout in seconds before the worker is killed
+// specify the timeout in seconds before the worker is killed (default is 180s)
 worker.maxTimeout = 60;
 
 // add custom commands that can be called from the worker and from python with
