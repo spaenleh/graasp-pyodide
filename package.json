@@ -3,7 +3,7 @@
   "version": "0.0.1",
   "description": "Pyodide worker for Graasp",
   "main": "dist/index.js",
-  "types": "dist/types.d.ts",
+  "types": "dist/index.d.ts",
   "scripts": {
     "build": "tsc",
     "prepack": "yarn build",
