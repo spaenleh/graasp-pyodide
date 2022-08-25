@@ -29,5 +29,6 @@
   "bugs": {
     "url": "https://github.com/spaenleh/graasp-pyodide/issues"
   },
-  "homepage": "https://github.com/spaenleh/graasp-pyodide#readme"
+  "homepage": "https://github.com/spaenleh/graasp-pyodide#readme",
+  "packageManager": "yarn@3.2.3"
 }
