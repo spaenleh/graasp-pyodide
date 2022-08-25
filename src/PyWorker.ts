@@ -30,6 +30,8 @@ pyWorker.stop();
 
 */
 
+import { getPythonWorkerCode } from "./webWorker";
+
 class PyWorker {
   workerURL: string;
   worker: Worker | null;
@@ -60,7 +62,8 @@ class PyWorker {
   private webworkerStatus: string;
 
   constructor(workerURL?: string) {
-    this.workerURL = workerURL || "webWorker.js";
+    this.workerURL =
+      workerURL || `data://application/javascript,${getPythonWorkerCode()}`;
     this.worker = null;
     this.isRunning = false;
     this.maxTimeout = 180; // seconds (should be enough for numpy + scipy + matplotlib)

@@ -1,9 +1,10 @@
-let pyodideVersionURL = "https://cdn.jsdelivr.net/pyodide/v0.21.0/full/";
+const pyodideVersionURL = "https://cdn.jsdelivr.net/pyodide/v0.21.0/full/";
 
-importScripts("Pyodide-v0.2.0.js", `${pyodideVersionURL}pyodide.js`);
+export const getPythonWorkerCode = () => {
+  return encodeURIComponent(`
+importScripts("Pyodide-v0.2.0.js", "${pyodideVersionURL}pyodide.js");
 
 var loaded = false;
-
 let outputClear = false;
 let outputBuffer = "";
 let pendingOutputFlushTime = -1;
@@ -118,4 +119,6 @@ onmessage = (ev) => {
       p.clearFigure();
       break;
   }
+};
+`);
 };
