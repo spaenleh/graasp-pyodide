@@ -1,3 +1,5 @@
+// can not import the webworker code like this because of origin policies
+
 const pyodideVersionURL = "https://cdn.jsdelivr.net/pyodide/v0.21.0/full/";
 
 importScripts(
