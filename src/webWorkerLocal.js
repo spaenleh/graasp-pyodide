@@ -37,7 +37,7 @@ const options = {
     }
   },
   handleInput: true,
-  pyodideURL: ${pyodideVersionURL},
+  pyodideURL: "${pyodideVersionURL}",
 };
 const p = new Pyodide(options);
 
