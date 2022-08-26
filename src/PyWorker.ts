@@ -15,18 +15,26 @@ Usage:
 let pyWorker = new PyWorker();
 pyWorker.onStatusChanged = (statusString) => { ... };
 pyWorker.onTerminated = () => { ... };
-pyWorker.onOutput = (text) => { ... };
+pyWorker.sharedOutput = b; // default is false (see below)
+pyWorker.onOutput = (text, append) => { ... };
 pyWorker.onInput = (prompt) => { ... };
 pyWorker.onFigure = (imageDataURL) => { ... }
 pyWorker.onTimeout = () => { ... };
 pyWorker.onDirtyFile = (path) => { ... };
 pyWorker.onFile = (path, data) => { ... };
+pyWorker.onError = (event) => { ... };
 pyWorker.addCommand("name", (data) => { ... });
 
 pyWorker.preload();	// optional
 
 pyWorker.run("...");
 pyWorker.stop();
+
+Note on sharedOutput: if output is modified directly by the application,
+e.g. for user input or to display other information, inline graphics etc.,
+sharedOutput should be set to true and onOutput will be called with append=true;
+otherwise, sharedOutput can be left to its default value of false, and onOutput
+will always be called with append=false.
 
 */
 
@@ -36,15 +44,20 @@ class PyWorker {
   workerURL: string;
   worker: Worker | null;
   isRunning: boolean;
+  isSuspended: boolean;
   // maximum allowed time to load packages in seconds
   maxTimeout: number;
   // id of the setTimeout function to cancel a running timeout
   timeoutId: number;
   // buffer for output
   outputBuffer: string;
+  // share output
+  sharedOutput: boolean;
+  // debugger current line
+  dbgCurrentLine: number | null;
 
   // callbacks
-  onOutput: ((outputBuffer: string) => void) | null;
+  onOutput: ((outputBuffer: string, append: boolean) => void) | null;
   onInput: ((prompt: string) => void) | null;
   onFigure: ((data: string) => void) | null;
   onTimeout: (() => void) | null;
@@ -54,6 +67,8 @@ class PyWorker {
   onStatusChanged: ((status: string) => void) | null;
   // called when the worker is done
   onTerminated: (() => void) | null;
+  // called when an error is detected
+  onError: ((error: ErrorEvent) => void) | null;
 
   //  --- private arguments ---
   // Commands that can be used from the worker with 'sendCommand(name, data)'
@@ -68,15 +83,18 @@ class PyWorker {
    */
   constructor(workerURL?: string, echoInputToStdout?: boolean) {
     this.workerURL =
-      workerURL ||
-      `data://application/javascript,${getPythonWorkerCode(echoInputToStdout)}`;
+      workerURL || `data://application/javascript,${getPythonWorkerCode()}`;
     this.worker = null;
     this.isRunning = false;
+    this.isSuspended = false;
     this.maxTimeout = 180; // seconds (should be enough for numpy + scipy + matplotlib)
     this.timeoutId = -1;
     this.outputBuffer = "";
+    this.sharedOutput = false; // onOutput always called with append=false
+    this.dbgCurrentLine = null;
 
     // callbacks
+    this.onError = null; // default: console.info
     this.onOutput = null;
     this.onInput = null;
     this.onFigure = null;
@@ -138,6 +156,8 @@ class PyWorker {
           break;
         case "input":
           this.isRunning = false;
+          this.webworkerStatus = "input";
+          this.onStatusChanged && this.onStatusChanged("input");
           this.onInput && this.onInput(ev.data.prompt);
           break;
         case "status":
@@ -146,6 +166,8 @@ class PyWorker {
           break;
         case "done":
           this.isRunning = false;
+          this.isSuspended = ev.data.suspendedAt != null;
+          this.dbgCurrentLine = ev.data.suspendedAt;
           this.webworkerStatus = "idle";
           this.onStatusChanged && this.onStatusChanged("done");
           this.onTerminated && this.onTerminated();
@@ -161,8 +183,21 @@ class PyWorker {
       }
     });
     this.worker.addEventListener("error", (ev) => {
-      console.info(ev);
+      if (this.onError) {
+        this.onError(ev);
+      } else {
+        console.info(ev);
+      }
     });
+
+    const msg = {
+      cmd: "config",
+      options: {
+        handleInput: true,
+        inlineInput: this.sharedOutput,
+      },
+    };
+    this.worker.postMessage(JSON.stringify(msg));
   }
 
   handleTimeout() {
@@ -181,12 +216,21 @@ class PyWorker {
     }
   }
 
-  run(src: string) {
+  run(src: string, breakpoints: number[] = []) {
     if (this.worker == null || this.isRunning) {
       this.create();
     }
-    const msg = src != null ? { cmd: "run", code: src } : { cmd: "preload" };
-    this.worker?.postMessage(JSON.stringify(msg));
+    const msg =
+      src != null
+        ? {
+            cmd: "run",
+            code: src,
+            breakpoints,
+          }
+        : {
+            cmd: "preload",
+          };
+    this.worker.postMessage(JSON.stringify(msg));
     this.isRunning = true;
     this.handleTimeout();
   }
@@ -209,8 +253,24 @@ class PyWorker {
    */
   cancelInput() {
     if (this.worker && !this.isRunning) {
-      const msg = { cmd: "cancel" };
+      const msg = {
+        cmd: "cancel",
+      };
       this.worker.postMessage(JSON.stringify(msg));
+      this.webworkerStatus = "";
+      this.onStatusChanged && this.onStatusChanged("");
+    }
+  }
+
+  dbgResume(dbgCmd: string) {
+    if (this.worker && this.isSuspended) {
+      const msg = {
+        cmd: "debug",
+        dbg: dbgCmd,
+      };
+      this.worker.postMessage(JSON.stringify(msg));
+      this.isRunning = true;
+      this.handleTimeout();
     }
   }
 
@@ -229,8 +289,10 @@ class PyWorker {
   }
 
   clearOutput() {
-    this.outputBuffer = "";
-    this.onOutput && this.onOutput(this.outputBuffer);
+    if (!this.sharedOutput) {
+      this.outputBuffer = "";
+    }
+    this.onOutput && this.onOutput("", false);
   }
 
   clearFigure() {
@@ -239,8 +301,12 @@ class PyWorker {
   }
 
   printToOutput(str: string) {
-    this.outputBuffer += str;
-    this.onOutput && this.onOutput(this.outputBuffer);
+    if (this.sharedOutput) {
+      this.onOutput && this.onOutput(str, true);
+    } else {
+      this.outputBuffer += str;
+      this.onOutput && this.onOutput(this.outputBuffer, false);
+    }
   }
 }
 

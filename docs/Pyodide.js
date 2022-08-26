@@ -1,3 +1,5 @@
+// UP-TO_DATE with pyodide-live
+
 /*
 
 Test of pyodide, with
