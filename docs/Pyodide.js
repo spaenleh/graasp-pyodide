@@ -156,20 +156,19 @@ class Pyodide {
 
       this.pyodide.runPython(`
                 import sys
+                import io
                 from js import pyodideGlobal
+
                 class __ImportIntercept:
                     def find_spec(self, name, path, module):
                         pyodideGlobal.requestModule(name)
                 sys.meta_path.append(__ImportIntercept())
 
-                import io
-                import js
-
                 class MyTextFile(io.StringIO):
                     def __init__(self, filename, mode="r"):
                         self.filename = filename
                         self.readOnly = mode == "r"
-                        content = js.pyodideGlobal.fs.getFile(filename)
+                        content = pyodideGlobal.fs.getFile(filename)
                         if content is None:
                             if self.readOnly:
                                 raise FileNotFoundError(filename)
@@ -185,7 +184,7 @@ class Pyodide {
                     def close(self):
                         if not self.readOnly:
                             content = self.getvalue()
-                            js.pyodideGlobal.fs.setFile(self.filename, content)
+                            pyodideGlobal.fs.setFile(self.filename, content)
                             pyodideGlobal.markFileDirty(self.filename)
                             super().close()
 
@@ -195,7 +194,7 @@ class Pyodide {
                 import os
 
                 def __os_listdir(path="."):
-                    return list(js.pyodideGlobal.fs.getDir())
+                    return list(pyodideGlobal.fs.getDir())
                 os.listdir = __os_listdir
 
                 # user code execution
@@ -697,6 +696,7 @@ class Pyodide {
       this.notifyStatus("running");
       self.pyodideGlobal.setFigureURL = (url) => this.setFigureURL(url);
       this.pyodide.globals.set("src", src);
+      // there are breakpoints in the code
       if (breakpoints && breakpoints.length > 0) {
         const bpList =
           "[" + breakpoints.map((bp) => bp.toString(10)).join(", ") + "]";
@@ -708,7 +708,7 @@ class Pyodide {
                     js.pyodideGlobal.setDbgCurrentLine(debug_current_line())
                 `);
         this.suspended = this.pyodide.globals.get("suspended");
-        this.requestInput = this.pyodide.globals.get("status") == 2;
+        this.requestInput = this.pyodide.globals.get("status") === 2;
         this.inputPrompt = null;
       } else if (this.handleInput) {
         // convert src to a coroutine

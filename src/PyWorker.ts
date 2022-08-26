@@ -61,9 +61,15 @@ class PyWorker {
   private commands: { [key: string]: Function };
   private webworkerStatus: string;
 
-  constructor(workerURL?: string) {
+  /**
+   * PyWorker is the class encapsulating the pyodide worker functionality
+   * @param workerURL url of the worker code, uses default code if omitted
+   * @param echoInputToStdout whether input and typed response should be echoed to stdout
+   */
+  constructor(workerURL?: string, echoInputToStdout?: boolean) {
     this.workerURL =
-      workerURL || `data://application/javascript,${getPythonWorkerCode()}`;
+      workerURL ||
+      `data://application/javascript,${getPythonWorkerCode(echoInputToStdout)}`;
     this.worker = null;
     this.isRunning = false;
     this.maxTimeout = 180; // seconds (should be enough for numpy + scipy + matplotlib)
@@ -140,8 +146,8 @@ class PyWorker {
           break;
         case "done":
           this.isRunning = false;
-          this.webworkerStatus = "";
-          this.onStatusChanged && this.onStatusChanged("");
+          this.webworkerStatus = "idle";
+          this.onStatusChanged && this.onStatusChanged("done");
           this.onTerminated && this.onTerminated();
           break;
         default:
@@ -167,7 +173,7 @@ class PyWorker {
       this.timeoutId = setTimeout(() => {
         if (this.isRunning) {
           this.stop();
-          this.onStatusChanged && this.onStatusChanged("");
+          this.onStatusChanged && this.onStatusChanged("timeout");
           this.onTimeout && this.onTimeout();
         }
         this.timeoutId = -1;

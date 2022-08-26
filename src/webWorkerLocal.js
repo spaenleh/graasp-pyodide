@@ -2,7 +2,7 @@ const pyodideVersionURL = "https://cdn.jsdelivr.net/pyodide/v0.21.0/full/";
 // todo: modify this
 const pyodideClassURL = "https://spaenleh.github.io/graasp-pyodide/Pyodide.js";
 
-export const getPythonWorkerCode = () => {
+export const getPythonWorkerCode = (echoInputToStdout = false) => {
   return encodeURIComponent(`
 importScripts("${pyodideClassURL}", "${pyodideVersionURL}pyodide.js");
 
@@ -37,6 +37,7 @@ const options = {
     }
   },
   handleInput: true,
+  inlineInput: ${echoInputToStdout ? "true" : "false"},
   pyodideURL: "${pyodideVersionURL}",
 };
 const p = new Pyodide(options);
