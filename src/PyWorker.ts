@@ -77,12 +77,14 @@ class PyWorker {
   // and from python with 'import js; js.sendCommand(name, data)'
   private commands: { [key: string]: Function };
   private webworkerStatus: string;
+  private workerCode;
 
   /**
    * PyWorker is the class encapsulating the pyodide worker functionality
    * @param workerURL url of the worker code, uses default code if omitted
    */
   constructor(workerURL?: string) {
+    this.workerCode = "";
     this.workerURL =
       workerURL || `data://application/javascript,${getPythonWorkerCode()}`;
     this.worker = null;
@@ -129,6 +131,7 @@ class PyWorker {
     if (this.worker != null) {
       this.worker.terminate();
       this.worker = null;
+      // todo: dealocate the workerCodeUrl object
       this.isRunning = false;
       this.onTerminated && this.onTerminated();
     }
@@ -136,7 +139,7 @@ class PyWorker {
 
   create() {
     this.stop();
-    this.worker = new Worker("./fullWorker.js", { type: "module" }); // new Worker(this.workerURL);
+    this.worker = new Worker(this.workerCode, { type: "module" }); // new Worker(this.workerURL);
     this.isRunning = false;
     this.worker.addEventListener("message", (ev) => {
       switch (ev.data.cmd) {
