@@ -38,6 +38,7 @@ will always be called with append=false.
 
 */
 
+import { PyodideStatus } from "./types";
 import { getPythonWorkerCode } from "./webWorkerLocal";
 
 class PyWorker {
@@ -62,15 +63,16 @@ class PyWorker {
   onFigure: ((data: string) => void) | null;
   onTimeout: (() => void) | null;
   onDirtyFile: ((data: unknown) => void) | null;
+  onStatusUpdate: ((status: PyodideStatus) => void) | null;
   onFile: ((path: string, data: unknown) => void) | null;
-  // called to announce a status change
-  onStatusChanged: ((status: string) => void) | null;
   // called when the worker is done
   onTerminated: (() => void) | null;
   // called when an error is detected
   onError: ((error: ErrorEvent) => void) | null;
 
   //  --- private arguments ---
+  // called to announce a status change
+  // private onStatusChanged: ((status: string) => void) | null;
   // Commands that can be used from the worker with 'sendCommand(name, data)'
   // and from python with 'import js; js.sendCommand(name, data)'
   private commands: { [key: string]: Function };
@@ -79,9 +81,8 @@ class PyWorker {
   /**
    * PyWorker is the class encapsulating the pyodide worker functionality
    * @param workerURL url of the worker code, uses default code if omitted
-   * @param echoInputToStdout whether input and typed response should be echoed to stdout
    */
-  constructor(workerURL?: string, echoInputToStdout?: boolean) {
+  constructor(workerURL?: string) {
     this.workerURL =
       workerURL || `data://application/javascript,${getPythonWorkerCode()}`;
     this.worker = null;
@@ -101,7 +102,7 @@ class PyWorker {
     this.onTimeout = null;
     this.onDirtyFile = null;
     this.onFile = null;
-    this.onStatusChanged = null;
+    this.onStatusUpdate = null; // default: console
     this.onTerminated = null;
 
     // commands added by addCommand(name, (data) => { ... })
@@ -135,7 +136,7 @@ class PyWorker {
 
   create() {
     this.stop();
-    this.worker = new Worker(this.workerURL);
+    this.worker = new Worker("./fullWorker.js"); // new Worker(this.workerURL);
     this.isRunning = false;
     this.worker.addEventListener("message", (ev) => {
       switch (ev.data.cmd) {
@@ -306,6 +307,34 @@ class PyWorker {
     } else {
       this.outputBuffer += str;
       this.onOutput && this.onOutput(this.outputBuffer, false);
+    }
+  }
+
+  private onStatusChanged(status: string) {
+    let newStatus = PyodideStatus.UNKNOWN_STATUS;
+    // loading Pyodide || loading module
+    if (status.startsWith("loading Pyodide")) {
+      newStatus = PyodideStatus.LOADING_PYODIDE;
+    } else if (status.startsWith("loading module")) {
+      newStatus = PyodideStatus.LOADING_MODULE;
+    } else if (["startup", "setup"].includes(status)) {
+      newStatus = PyodideStatus.INSTALLING;
+    } else if (status === "running") {
+      newStatus = PyodideStatus.RUNNING;
+    } else if (["done", ""].includes(status)) {
+      newStatus = PyodideStatus.READY;
+    } else if (["timeout"].includes(status)) {
+      newStatus = PyodideStatus.TIMEOUT;
+    } else if (status === "input") {
+      newStatus = PyodideStatus.WAIT_INPUT;
+    } else {
+      newStatus = PyodideStatus.UNKNOWN_STATUS;
+    }
+    if (this.onStatusUpdate) {
+      // call the user-defined callback with the enum status
+      this.onStatusUpdate?.(newStatus);
+    } else {
+      console.log(`Status Update: ${newStatus}`);
     }
   }
 }
