@@ -15,8 +15,7 @@
     "Basile Spaenlehauer"
   ],
   "scripts": {
-    "build": "yarn build:lib",
-    "build:lib": "tsc",
+    "build": "tsc",
     "build:worker": "rollup -c rollup.config.js",
     "prepack": "yarn build",
     "prepare": "yarn prepack",
