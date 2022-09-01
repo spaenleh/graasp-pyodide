@@ -6,7 +6,12 @@ const sanitize = (code: string) => {
   return code;
 };
 
-const runPython = (config: RunnerConfig, callback: () => void) => {
+/**
+ * Run some Python code, specifying a config object
+ * @param {RunnerConfig} config containing the `headerCode`, `footerCode`, `code` and worker objects
+ * @param callback an optional function to assign to the `onTerminated` member of the worker
+ */
+const runPython = (config: RunnerConfig, callback?: () => void) => {
   const { headerCode = "", footerCode = "", code, worker, fs: files } = config;
 
   worker.onTerminated = callback;

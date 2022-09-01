@@ -15,7 +15,9 @@
     "Basile Spaenlehauer"
   ],
   "scripts": {
-    "build": "tsc",
+    "build": "yarn build:lib",
+    "build:lib": "tsc",
+    "build:worker": "rollup -c rollup.config.js",
     "prepack": "yarn build",
     "prepare": "yarn prepack",
     "test": "echo \"Error: no test specified\" && exit 1",
@@ -34,5 +36,10 @@
     "url": "https://github.com/spaenleh/graasp-pyodide/issues"
   },
   "homepage": "https://github.com/spaenleh/graasp-pyodide#readme",
-  "packageManager": "yarn@3.2.3"
+  "packageManager": "yarn@3.2.3",
+  "devDependencies": {
+    "rollup": "^2.79.0",
+    "rollup-plugin-terser": "^7.0.2",
+    "typedoc": "^0.23.12"
+  }
 }

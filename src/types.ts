@@ -1,8 +1,21 @@
 import PyWorker from "./PyWorker";
 
-type File = {
+export type File = {
   content: string;
 };
+
+/** @enum {string} describes the status of the pyodide instance */
+export enum PyodideStatus {
+  READY = "Ready",
+  RUNNING = "Running",
+  LOADING_PYODIDE = "Loading Pyodide…",
+  LOADING_MODULE = "Loading Modules…",
+  INSTALLING = "Installing…",
+  WAIT_INPUT = "Waiting on input",
+  ERROR = "Error",
+  TIMEOUT = "Failed: Timeout",
+  UNKNOWN_STATUS = "Unknown Status",
+}
 
 export interface RunnerConfig {
   code: string;

@@ -1,3 +1,7 @@
+// UP-TO_DATE with pyodide-live
+
+const pyodideVersionURL = "https://cdn.jsdelivr.net/pyodide/v0.21.0/full/";
+
 /*
 
 Test of pyodide, with
@@ -28,7 +32,7 @@ Usage:
     // or periodically, typically with reset=true to mark saved files as clean
 
 With option handleInput=true, some support for input function is provided.
-It's limited to calls outside any function definition. The whole code is
+It is limited to calls outside any function definition. The whole code is
 compiled as a coroutine, replacing "input(...)" with "(yield(False,...,locals()))",
 and the function is executed as a coroutine, sending input string (first
 None) and receiving prompt for next input until a StopIteration exception
@@ -39,14 +43,14 @@ To enable it:
 - pass handleInput:true in Pyodide constructor options
 - after executing method p.run(src), check if p.requestInput is true; if it is,
 get input from the user with prompt p.inputPrompt (null if None was passed to
-Python's function "input"), execute p.submitInput(input), and continue checking
+Python "input" function), execute p.submitInput(input), and continue checking
 p.requestInput and getting more input from the user until p.requestInput is false.
 By default, input prompt is assumed to be displayed at a different place than in
 standard output; both the prompt and the value entered by the user are echoed
 to stdout once they have been submitted. By setting options.inlineInput=true,
 the prompt is written to stdout before p.run returns with p.requestInput===true,
 the value entered by the user is assumed to be echoed immediately to stdout
-(e.g. in an emulated terminal), and to remain there; it isn't echoed by Pyodide.
+(e.g. in an emulated terminal), and to remain there; it is not echoed by Pyodide.
 
 /** Simple virtual file system
 */
@@ -113,7 +117,7 @@ class Pyodide {
 
     this.handleInput = (options && options.handleInput) || false;
     this.inlineInput = (options && options.inlineInput) || false;
-    this.pyodideURL = (options && options.pyodideURL) || Pyodide.defaultURL;
+    this.pyodideURL = (options && options.pyodideURL) || pyodideVersionURL;
     var versionRes = /\/(v[\d.]+)\//.exec(this.pyodideURL);
     this.pyodideVersion = versionRes ? versionRes[1] : "";
     this.requestInput = false;
@@ -125,7 +129,7 @@ class Pyodide {
     this.requestedModuleNames = [];
     // requested modules which have been fetched successfully
     this.loadedModuleNames = [];
-    // requested modules which couldn't be fetched successfully
+    // requested modules which could not be fetched successfully
     this.failedModuleNames = [];
 
     // virtual file system
@@ -230,7 +234,7 @@ class Pyodide {
                             self.break_at_start = True
                             # past actions or inputs from the user
                             # ("c"=continue, "n"=next, "s"=step, "r"=return, etc.)
-                            # resume will execute them and suspend execution when they're exhausted
+                            # resume will execute them and suspend execution when they are exhausted
                             self.debug_action_history = []
                             # True to ignore trace calls until 2nd event="call"
                             self.ignore_top_call = False
@@ -536,7 +540,7 @@ class Pyodide {
     if (this.loadedModuleNames.indexOf("matplotlib") >= 0) {
       this.pyodide.runPython(`
                 import matplotlib
-                matplotlib.use('Agg')
+                matplotlib.use("Agg")
             `);
     }
 
@@ -549,7 +553,7 @@ class Pyodide {
                         import ast
 
                         def check_node(node, block_reason=None):
-                            """Check that input function is called only from where it's supported,
+                            """Check that input function is called only from where it is supported,
                             i.e. at top-level if block_reason is None, not in functions or methods, and
                             nowhere if block_reason is a string describing the offending context. Raise
                             an exception otherwise.
@@ -566,7 +570,7 @@ class Pyodide {
                                 check_node(child, block_reason)
 
                         def check(src):
-                            """Check that input function is called only from where it's supported,
+                            """Check that input function is called only from where it is supported,
                             i.e. at top-level, not in functions or methods. Raise an exception otherwise.
                             """
                             root = ast.parse(src)
@@ -605,7 +609,7 @@ class Pyodide {
                             replacer = Replacer()
                             root1 = replacer.visit(root)
 
-                            # replace last statement with "import sys; sys.displayhook(expr)" if it's an expr
+                            # replace last statement with "import sys; sys.displayhook(expr)" if it is an expr
                             last_el = root1.body[-1]
                             if type(last_el) is ast.Expr:
                                 expr = root1.body.pop()
@@ -765,7 +769,7 @@ class Pyodide {
             this.postExec && this.postExec();
           });
         // skip output and ui changes performed upon end
-        // since we're not finished yet
+        // since we are not finished yet
         return false;
       } else {
         errMsg = err.message;
@@ -866,21 +870,19 @@ class Pyodide {
     if (this.requestInput) {
       this.requestInput = false;
       try {
-        this.pyodide.runPython(`
-                    evaluator.cancel_input()
-                `);
+        this.pyodide.runPython("evaluator.cancel_input()");
       } catch (err) {}
       this.dbgCurrentLine = null;
     }
   }
 
   continueDebugging(dbgCommand) {
+    const resetCode =
+      "import io, sys" +
+      "sys.stdout = io.StringIO()" +
+      "sys.stderr = sys.stdout";
     // (re)set stdout and stderr
-    this.pyodide.runPython(`
-            import io, sys
-            sys.stdout = io.StringIO()
-            sys.stderr = sys.stdout
-        `);
+    this.pyodide.runPython(resetCode);
 
     try {
       self.dbg_command = dbgCommand;
@@ -929,4 +931,189 @@ class Pyodide {
   }
 }
 
-Pyodide.defaultURL = "https://cdn.jsdelivr.net/pyodide/v0.21.0/full/";
+// can not import the webworker code like this because of origin policies
+/*
+
+Test of pyodide, with
+	- stdout and stderr collected and displayed in a pre element
+	- error message sent to stderr
+	- last result displayed with sys.displayhook
+	- dynamic loading of modules referenced by import statements
+	- runs asynchronously in a webworker, with timeout and interruption
+
+
+Messages sent from main thread to webworker: json, {cmd:string,...}, with:
+- cmd="config": options={sharedOutput:b}
+- cmd="preload": load Pyodide to execute first "run" quicker
+- cmd="run": code=Python source code to be executed
+- cmd="submit": str=string provided by the user
+- cmd="get": path=path of file to be sent back with {cmd:"file",data:content}
+- cmd="put": path=path of file to be stored in fs, data=content
+- cmd="clearFigure"
+
+Messages sent from webworker to main thread: json, {cmd:string,...}, with:
+- cmd="clear": clear output
+- cmd="cmd:xxx": additional command with data sent by sendCommand
+- cmd="done": sent once execution is completed
+- cmd="dirty": data=path of file which has been modified
+- cmd="figure": data=dataUrl
+- cmd="file": path=string, data=string=file content, reply to cmd="get"
+- cmd="input": prompt=string or null, expect a message back with cmd="submit"
+- cmd="print": data=string to be appended to the output
+
+Author: Yves Piguet, EPFL, 2019-2021
+
+*/
+
+importScripts(`${pyodideVersionURL}pyodide.js`);
+
+var loaded = false;
+let outputClear = false;
+let outputBuffer = "";
+let pendingOutputFlushTime = -1;
+const outputUpdateRate = 10; // ms
+
+var p = null;
+
+function updateOutput(forced) {
+  let currentTime = Date.now();
+  if (forced) {
+    pendingOutputFlushTime = currentTime;
+  }
+  if (pendingOutputFlushTime < 0) {
+    // schedule flush
+    pendingOutputFlushTime = currentTime + outputUpdateRate;
+  } else if (pendingOutputFlushTime <= currentTime) {
+    // time to flush
+    if (outputClear) {
+      postMessage({ cmd: "clear" });
+      outputClear = false;
+    }
+    if (outputBuffer) {
+      postMessage({ cmd: "print", data: outputBuffer });
+      outputBuffer = "";
+    }
+    pendingOutputFlushTime = -1;
+  }
+}
+
+function sendCommand(cmd, data) {
+  postMessage({ cmd: "cmd:" + cmd, data: data });
+}
+
+function run(src, breakpoints) {
+  postMessage({
+    cmd: "status",
+    status: breakpoints && breakpoints.length > 0 ? "debugging" : "running",
+  });
+  p.run(src, breakpoints);
+}
+
+function submitInput(str, breakpoints) {
+  p.submitInput(str, breakpoints);
+}
+
+function cancelInput(str) {
+  p.cancelInput();
+}
+
+onmessage = (ev) => {
+  function init(configOptions) {
+    const options = {
+      write: (str) => {
+        outputBuffer += str;
+      },
+      clearText: () => {
+        outputBuffer = "";
+        outputClear = true;
+      },
+      setFigureURL: (dataURL) => {
+        postMessage({ cmd: "figure", data: dataURL });
+      },
+      notifyStatus: (status) => {
+        postMessage({ cmd: "status", status: status });
+      },
+      notifyDirtyFile: (path) => {
+        postMessage({ cmd: "dirty", data: path });
+      },
+      postExec: function () {
+        updateOutput(true);
+        postMessage({
+          cmd: "done",
+          suspendedAt: p.suspended ? p.dbgCurrentLine : null,
+        });
+        if (p.requestInput) {
+          postMessage({ cmd: "input", prompt: p.inputPrompt });
+        }
+      },
+      handleInput: (configOptions && configOptions.handleInput) || false,
+      inlineInput: (configOptions && configOptions.inlineInput) || false,
+      pyodideURL: pyodideURL,
+    };
+    p = new Pyodide(options);
+  }
+
+  let msg = JSON.parse(ev.data);
+
+  if (msg.cmd === "config") {
+    init(msg.options);
+  } else {
+    if (p == null) {
+      init();
+    }
+    switch (msg.cmd) {
+      case "preload":
+        postMessage({ cmd: "status", status: "startup" });
+        p.load(() => {
+          loaded = true;
+          postMessage({ cmd: "done" });
+        });
+        break;
+      case "run":
+        if (loaded) {
+          run(msg.code, msg.breakpoints);
+        } else {
+          postMessage({ cmd: "status", status: "startup" });
+          p.load(() => {
+            run(msg.code, msg.breakpoints);
+            loaded = true;
+          });
+        }
+        break;
+      case "submit":
+        submitInput(msg.str);
+        break;
+      case "cancel":
+        cancelInput();
+        break;
+      case "debug":
+        if (loaded && p.suspended) {
+          switch (msg.dbg) {
+            case "next":
+            case "step":
+            case "return":
+            case "continue":
+            case "quit":
+              p.continueDebugging(msg.dbg);
+              break;
+          }
+        } else {
+          postMessage({ cmd: "done" });
+        }
+        break;
+      case "get":
+        postMessage({
+          cmd: "file",
+          path: msg.path,
+          data: p.fs.getFile(msg.path),
+        });
+        break;
+      case "put":
+        p.fs.setFile(msg.path, msg.data);
+        break;
+      case "clearFigure":
+        p.clearFigure();
+        break;
+    }
+  }
+};
