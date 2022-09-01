@@ -136,7 +136,7 @@ class PyWorker {
 
   create() {
     this.stop();
-    this.worker = new Worker("./fullWorker.js"); // new Worker(this.workerURL);
+    this.worker = new Worker("./fullWorker.js", { type: "module" }); // new Worker(this.workerURL);
     this.isRunning = false;
     this.worker.addEventListener("message", (ev) => {
       switch (ev.data.cmd) {
