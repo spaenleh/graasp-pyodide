@@ -1048,7 +1048,7 @@ onmessage = (ev) => {
       },
       handleInput: (configOptions && configOptions.handleInput) || false,
       inlineInput: (configOptions && configOptions.inlineInput) || false,
-      pyodideURL: pyodideURL,
+      pyodideURL: pyodideVersionURL,
     };
     p = new Pyodide(options);
   }
