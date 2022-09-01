@@ -1,5 +1,3 @@
-// UP-TO_DATE with pyodide-live
-
 /*
 
 Test of pyodide, with
@@ -932,4 +930,3 @@ class Pyodide {
 }
 
 Pyodide.defaultURL = "https://cdn.jsdelivr.net/pyodide/v0.21.0/full/";
-//Pyodide.defaultURL = "https://cdn.jsdelivr.net/pyodide/dev/full/"

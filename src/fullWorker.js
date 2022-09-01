@@ -32,7 +32,7 @@ Usage:
     // or periodically, typically with reset=true to mark saved files as clean
 
 With option handleInput=true, some support for input function is provided.
-It's limited to calls outside any function definition. The whole code is
+It is limited to calls outside any function definition. The whole code is
 compiled as a coroutine, replacing "input(...)" with "(yield(False,...,locals()))",
 and the function is executed as a coroutine, sending input string (first
 None) and receiving prompt for next input until a StopIteration exception
@@ -43,14 +43,14 @@ To enable it:
 - pass handleInput:true in Pyodide constructor options
 - after executing method p.run(src), check if p.requestInput is true; if it is,
 get input from the user with prompt p.inputPrompt (null if None was passed to
-Python's function "input"), execute p.submitInput(input), and continue checking
+Python "input" function), execute p.submitInput(input), and continue checking
 p.requestInput and getting more input from the user until p.requestInput is false.
 By default, input prompt is assumed to be displayed at a different place than in
 standard output; both the prompt and the value entered by the user are echoed
 to stdout once they have been submitted. By setting options.inlineInput=true,
 the prompt is written to stdout before p.run returns with p.requestInput===true,
 the value entered by the user is assumed to be echoed immediately to stdout
-(e.g. in an emulated terminal), and to remain there; it isn't echoed by Pyodide.
+(e.g. in an emulated terminal), and to remain there; it is not echoed by Pyodide.
 
 /** Simple virtual file system
 */
@@ -129,7 +129,7 @@ class Pyodide {
     this.requestedModuleNames = [];
     // requested modules which have been fetched successfully
     this.loadedModuleNames = [];
-    // requested modules which couldn't be fetched successfully
+    // requested modules which could not be fetched successfully
     this.failedModuleNames = [];
 
     // virtual file system
@@ -234,7 +234,7 @@ class Pyodide {
                             self.break_at_start = True
                             # past actions or inputs from the user
                             # ("c"=continue, "n"=next, "s"=step, "r"=return, etc.)
-                            # resume will execute them and suspend execution when they're exhausted
+                            # resume will execute them and suspend execution when they are exhausted
                             self.debug_action_history = []
                             # True to ignore trace calls until 2nd event="call"
                             self.ignore_top_call = False
@@ -540,7 +540,7 @@ class Pyodide {
     if (this.loadedModuleNames.indexOf("matplotlib") >= 0) {
       this.pyodide.runPython(`
                 import matplotlib
-                matplotlib.use('Agg')
+                matplotlib.use("Agg")
             `);
     }
 
@@ -553,7 +553,7 @@ class Pyodide {
                         import ast
 
                         def check_node(node, block_reason=None):
-                            """Check that input function is called only from where it's supported,
+                            """Check that input function is called only from where it is supported,
                             i.e. at top-level if block_reason is None, not in functions or methods, and
                             nowhere if block_reason is a string describing the offending context. Raise
                             an exception otherwise.
@@ -570,7 +570,7 @@ class Pyodide {
                                 check_node(child, block_reason)
 
                         def check(src):
-                            """Check that input function is called only from where it's supported,
+                            """Check that input function is called only from where it is supported,
                             i.e. at top-level, not in functions or methods. Raise an exception otherwise.
                             """
                             root = ast.parse(src)
@@ -609,7 +609,7 @@ class Pyodide {
                             replacer = Replacer()
                             root1 = replacer.visit(root)
 
-                            # replace last statement with "import sys; sys.displayhook(expr)" if it's an expr
+                            # replace last statement with "import sys; sys.displayhook(expr)" if it is an expr
                             last_el = root1.body[-1]
                             if type(last_el) is ast.Expr:
                                 expr = root1.body.pop()
@@ -769,7 +769,7 @@ class Pyodide {
             this.postExec && this.postExec();
           });
         // skip output and ui changes performed upon end
-        // since we're not finished yet
+        // since we are not finished yet
         return false;
       } else {
         errMsg = err.message;
@@ -870,21 +870,19 @@ class Pyodide {
     if (this.requestInput) {
       this.requestInput = false;
       try {
-        this.pyodide.runPython(`
-                    evaluator.cancel_input()
-                `);
+        this.pyodide.runPython("evaluator.cancel_input()");
       } catch (err) {}
       this.dbgCurrentLine = null;
     }
   }
 
   continueDebugging(dbgCommand) {
+    const resetCode =
+      "import io, sys" +
+      "sys.stdout = io.StringIO()" +
+      "sys.stderr = sys.stdout";
     // (re)set stdout and stderr
-    this.pyodide.runPython(`
-            import io, sys
-            sys.stdout = io.StringIO()
-            sys.stderr = sys.stdout
-        `);
+    this.pyodide.runPython(resetCode);
 
     try {
       self.dbg_command = dbgCommand;
