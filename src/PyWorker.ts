@@ -136,7 +136,16 @@ class PyWorker {
 
   create() {
     this.stop();
-    this.worker = new Worker(this.workerURL);
+    // if worker code can not be imported because of access policies try wrapping it in a `importScripts`
+    try {
+      this.worker = new Worker(this.workerURL);
+    } catch (error) {
+      console.log(error);
+      const wrappedWorkerCode = `data://application/javascript,${getWrappedWorkerCode(
+        this.workerURL
+      )};`;
+      this.worker = new Worker(wrappedWorkerCode);
+    }
     this.isRunning = false;
     this.worker.addEventListener("message", (ev) => {
       switch (ev.data.cmd) {
