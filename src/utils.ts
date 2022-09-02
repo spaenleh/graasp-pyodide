@@ -1,3 +1,3 @@
-const getWrappedWorkerCode = (url: string) => {
+export const getWrappedWorkerCode = (url: string) => {
   return `importScripts("${url}");`;
 };

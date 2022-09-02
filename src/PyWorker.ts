@@ -39,6 +39,7 @@ will always be called with append=false.
 */
 
 import { PyodideStatus } from "./types";
+import { getWrappedWorkerCode } from "./utils";
 import { getPythonWorkerCode } from "./webWorkerLocal";
 
 class PyWorker {
