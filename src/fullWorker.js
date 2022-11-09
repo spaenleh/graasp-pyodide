@@ -54,9 +54,9 @@ the value entered by the user is assumed to be echoed immediately to stdout
 
 /** Simple virtual file system
 */
-class FileSystem {
+class VirtualFileSystem {
   /** Create a FileSystem object with data stored in sessionStorage
-        @return {FileSystem}
+        @return {VirtualFileSystem}
     */
   static create() {
     return self.sessionStorage
@@ -67,7 +67,7 @@ class FileSystem {
 
 /** Simple virtual file system with data stored internally
  */
-class FileSystemJS extends FileSystem {
+class FileSystemJS extends VirtualFileSystem {
   constructor() {
     super();
     this.fs = {};
@@ -89,7 +89,7 @@ class FileSystemJS extends FileSystem {
 /** Simple virtual file system with data stored as separate entries in
     sessionStorage
 */
-class FileSystemSessionStorage extends FileSystem {
+class FileSystemSessionStorage extends VirtualFileSystem {
   getDir() {
     return Object.keys(self.sessionStorage);
   }
@@ -125,6 +125,8 @@ class Pyodide {
     this.suspended = false; // in debugger
     this.dbgCurrentLine = null;
 
+    // modules requested to be pre-loaded
+    this.preLoadedPackages = [];
     // requested modules waiting to be fetched
     this.requestedModuleNames = [];
     // requested modules which have been fetched successfully
@@ -133,7 +135,7 @@ class Pyodide {
     this.failedModuleNames = [];
 
     // virtual file system
-    this.fs = FileSystem.create();
+    this.fs = VirtualFileSystem.create();
     // files which have been created or modified
     this.dirtyFiles = [];
   }
@@ -141,24 +143,41 @@ class Pyodide {
   load(then) {
     this.notifyStatus("loading Pyodide " + this.pyodideVersion);
 
-    loadPyodide({
-      indexURL: this.pyodideURL,
-    }).then((pyodide) => {
-      this.pyodide = pyodide;
-      this.pyodideVersion = pyodide.version;
+    globalThis
+      .loadPyodide({
+        indexURL: this.pyodideURL,
+      })
+      .then((pyodide) => {
+        this.pyodide = pyodide;
+        this.pyodideVersion = pyodide.version;
 
-      this.notifyStatus("setup");
+        this.notifyStatus("setup");
 
-      self.pyodideGlobal = {
-        requestModule: (name) => this.requestModule(name),
-        fs: this.fs,
-        markFileDirty: (path) => this.markFileDirty(path),
-        setDbgCurrentLine: (line) => {
-          this.dbgCurrentLine = line;
-        },
-      };
+        self.pyodideGlobal = {
+          requestModule: (name) => this.requestModule(name),
+          fs: this.fs,
+          markFileDirty: (path) => this.markFileDirty(path),
+          setDbgCurrentLine: (line) => {
+            this.dbgCurrentLine = line;
+          },
+        };
 
-      this.pyodide.runPython(`
+        // pre-load requested packages
+        this.preLoadedPackages.forEach((packageName) => {
+          this.notifyStatus("pre-loading " + packageName);
+          this.pyodide
+            .loadPackage(packageName)
+            .then(() => {
+              this.loadedModuleNames.push(packageName);
+              this.notifyStatus(packageName + " pre-loaded");
+            })
+            .catch((err) => {
+              this.failedModuleNames.push(packageName);
+              this.notifyStatus("error pre-loading " + packageName + err);
+            });
+        });
+
+        this.pyodide.runPython(`
                 import sys
                 import io
                 from js import pyodideGlobal
@@ -494,8 +513,8 @@ class Pyodide {
                     return dbg.current_line if dbg and dbg.is_suspended() else None
             `);
 
-      then && then();
-    });
+        then && then();
+      });
   }
 
   requestModule(name) {
@@ -1048,6 +1067,7 @@ onmessage = (ev) => {
       },
       handleInput: (configOptions && configOptions.handleInput) || false,
       inlineInput: (configOptions && configOptions.inlineInput) || false,
+      preLoadedPackages: configOptions?.preLoadedPackages || [],
       pyodideURL: pyodideVersionURL,
     };
     p = new Pyodide(options);

@@ -9,7 +9,6 @@ export default [
     },
     plugins: [
       terser({
-        warnings: true,
         mangle: {
           module: true,
         },

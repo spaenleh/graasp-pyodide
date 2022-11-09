@@ -57,6 +57,8 @@ class PyWorker {
   sharedOutput: boolean;
   // debugger current line
   dbgCurrentLine: number | null;
+  // packages to pre-load on startup
+  preLoadedPackages: string[];
 
   // callbacks
   onOutput: ((outputBuffer: string, append: boolean) => void) | null;
@@ -94,6 +96,8 @@ class PyWorker {
     this.outputBuffer = "";
     this.sharedOutput = false; // onOutput always called with append=false
     this.dbgCurrentLine = null;
+    // packages to load by default
+    this.preLoadedPackages = [];
 
     // callbacks
     this.onError = null; // default: console.info
@@ -157,31 +161,31 @@ class PyWorker {
           this.clearOutput();
           break;
         case "figure":
-          this.onFigure && this.onFigure(ev.data.data);
+          this.onFigure?.(ev.data.data);
           break;
         case "dirty":
-          this.onDirtyFile && this.onDirtyFile(ev.data.data);
+          this.onDirtyFile?.(ev.data.data);
           break;
         case "file":
-          this.onFile && this.onFile(ev.data.path, ev.data.data);
+          this.onFile?.(ev.data.path, ev.data.data);
           break;
         case "input":
           this.isRunning = false;
           this.webworkerStatus = "input";
-          this.onStatusChanged && this.onStatusChanged("input");
-          this.onInput && this.onInput(ev.data.prompt);
+          this.onStatusChanged?.("input");
+          this.onInput?.(ev.data.prompt);
           break;
         case "status":
           this.webworkerStatus = ev.data.status;
-          this.onStatusChanged && this.onStatusChanged(this.webworkerStatus);
+          this.onStatusChanged?.(this.webworkerStatus);
           break;
         case "done":
           this.isRunning = false;
           this.isSuspended = ev.data.suspendedAt != null;
           this.dbgCurrentLine = ev.data.suspendedAt;
           this.webworkerStatus = "idle";
-          this.onStatusChanged && this.onStatusChanged("done");
-          this.onTerminated && this.onTerminated();
+          this.onStatusChanged?.("done");
+          this.onTerminated?.();
           break;
         default:
           if (
@@ -206,6 +210,7 @@ class PyWorker {
       options: {
         handleInput: true,
         inlineInput: this.sharedOutput,
+        preLoadedPackages: this.preLoadedPackages,
       },
     };
     this.worker.postMessage(JSON.stringify(msg));
