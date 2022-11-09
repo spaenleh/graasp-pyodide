@@ -142,6 +142,7 @@ class Pyodide {
 
   load(then) {
     this.notifyStatus("loading Pyodide " + this.pyodideVersion);
+    console.log("Using new syntax for worker");
 
     globalThis
       .loadPyodide({

@@ -143,7 +143,7 @@ class PyWorker {
     this.stop();
     // if worker code can not be imported because of access policies try wrapping it in a `importScripts`
     try {
-      this.worker = new Worker(this.workerURL);
+      this.worker = new Worker(new URL("./fullWorker.js", import.meta.url));
     } catch (error) {
       console.log(error);
       const wrappedWorkerCode = `data://application/javascript,${getWrappedWorkerCode(
