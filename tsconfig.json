@@ -14,10 +14,5 @@
     "declaration": true
   },
   "include": ["src/**/*"],
-  "exclude": [
-    "node_modules",
-    "**/*.spec.ts",
-    "**/*.test.{ts|js|tsx|jsx}",
-    "src/fullWorker.js"
-  ]
+  "exclude": ["node_modules", "**/*.spec.ts", "**/*.test.{ts|js|tsx|jsx}"]
 }
