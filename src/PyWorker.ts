@@ -332,6 +332,10 @@ class PyWorker {
     // loading Pyodide || loading module
     if (status.startsWith("loading Pyodide")) {
       newStatus = PyodideStatus.LOADING_PYODIDE;
+    } else if (status.startsWith("pre-loading")) {
+      newStatus = PyodideStatus.PRE_LOADING_MODULE;
+    } else if (status.startsWith("error pre-loading")) {
+      newStatus = PyodideStatus.PRE_LOADING_MODULE_ERROR;
     } else if (status.startsWith("loading module")) {
       newStatus = PyodideStatus.LOADING_MODULE;
     } else if (["startup", "setup"].includes(status)) {

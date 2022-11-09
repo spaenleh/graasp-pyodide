@@ -10,6 +10,8 @@ export enum PyodideStatus {
   RUNNING = "Running",
   LOADING_PYODIDE = "Loading Pyodide…",
   LOADING_MODULE = "Loading Modules…",
+  PRE_LOADING_MODULE = "Pre-loading Modules…",
+  PRE_LOADING_MODULE_ERROR = "Failed Pre-loading…",
   INSTALLING = "Installing…",
   WAIT_INPUT = "Waiting on input",
   ERROR = "Error",

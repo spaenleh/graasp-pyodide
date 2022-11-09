@@ -170,7 +170,6 @@ class Pyodide {
             .loadPackage(packageName)
             .then(() => {
               this.loadedModuleNames.push(packageName);
-              this.notifyStatus(packageName + " pre-loaded");
             })
             .catch((err) => {
               this.failedModuleNames.push(packageName);
