@@ -213,6 +213,8 @@ class PyWorker {
         preLoadedPackages: this.preLoadedPackages,
       },
     };
+    console.log("preloaded packages in PyWorker: ", this.preLoadedPackages);
+
     this.worker.postMessage(JSON.stringify(msg));
   }
 

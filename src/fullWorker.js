@@ -126,7 +126,7 @@ class Pyodide {
     this.dbgCurrentLine = null;
 
     // modules requested to be pre-loaded
-    this.preLoadedPackages = [];
+    this.preLoadedPackages = options?.preLoadedPackages;
     // requested modules waiting to be fetched
     this.requestedModuleNames = [];
     // requested modules which have been fetched successfully
@@ -1070,6 +1070,7 @@ onmessage = (ev) => {
       preLoadedPackages: configOptions?.preLoadedPackages || [],
       pyodideURL: pyodideVersionURL,
     };
+    console.log("options inside worker: ", options);
     p = new Pyodide(options);
   }
 
