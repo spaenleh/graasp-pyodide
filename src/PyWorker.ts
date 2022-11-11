@@ -67,7 +67,7 @@ class PyWorker {
   onTimeout: (() => void) | null;
   onDirtyFile: ((data: unknown) => void) | null;
   onStatusUpdate: ((status: PyodideStatus) => void) | null;
-  onFile: ((path: string, data: unknown) => void) | null;
+  onReceivePyFile: ((path: string, data: unknown) => void) | null;
   // called when the worker is done
   onTerminated: (() => void) | null;
   // called when an error is detected
@@ -106,7 +106,7 @@ class PyWorker {
     this.onFigure = null;
     this.onTimeout = null;
     this.onDirtyFile = null;
-    this.onFile = null;
+    this.onReceivePyFile = null;
     this.onStatusUpdate = null; // default: console
     this.onTerminated = null;
 
@@ -169,7 +169,7 @@ class PyWorker {
           this.onDirtyFile?.(ev.data.data);
           break;
         case "file":
-          this.onFile?.(ev.data.path, ev.data.data);
+          this.onReceivePyFile?.(ev.data.path, ev.data.data);
           break;
         case "input":
           this.isRunning = false;
